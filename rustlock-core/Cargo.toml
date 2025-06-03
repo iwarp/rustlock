@@ -1,0 +1,23 @@
+[package]
+name = "rustlock-core"
+edition.workspace = true
+version.workspace = true
+
+
+[dependencies]
+ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
+hex = "0.4.3"
+version-compare = "0.2.0"
+sysinfo="0.35.1"
+
+machineid-rs = "1.2.4"
+thiserror="2.0.12"
+
+serde = {version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+rmp-serde = "1.3.0"
+
+log = "0.4.27"
+clap = { version = "4.5.4", features = ["derive"] }
+
+

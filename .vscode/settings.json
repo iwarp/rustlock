@@ -1,10 +1,18 @@
 {
     "cSpell.words": [
+        "chrono",
         "cpus",
+        "Datelike",
+        "dialoguer",
         "ecies",
         "HWID",
+        "hwinfo",
+        "keypair",
         "Licneing",
         "machineid",
-        "sysinfo"
+        "rustlock",
+        "sqlx",
+        "sysinfo",
+        "walkdir"
     ]
 }

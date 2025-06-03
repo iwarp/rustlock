@@ -11,7 +11,7 @@ use crate::error::RustLockErrors;
 
 pub mod error;
 pub mod license;
-mod sysinfo;
+pub mod sysinfo;
 
 pub struct RustLock {
     license_key: String,
@@ -27,13 +27,7 @@ pub struct RustLock {
 }
 
 impl RustLock {
-    pub fn new(
-        license_key: String,
-        blocked_customer: Vec<u16>,
-        version: String,
-        mid_key: String,
-        info_key: String,
-    ) -> Self {
+    pub fn new(license_key: String, blocked_customer: Vec<u16>, version: String, mid_key: String, info_key: String) -> Self {
         let (network_lock, storage_lock, cpu_lock, os_lock) = sysinfo::get_locks(&mid_key);
 
         Self {
@@ -62,9 +56,7 @@ impl RustLock {
         let disks = Disks::new_with_refreshed_list();
         for disk in &disks {
             // info!("{:?}", disk);
-            lic_info
-                .storage_name
-                .clone_from(&disk.name().to_str().unwrap_or_default().to_owned());
+            lic_info.storage_name.clone_from(&disk.name().to_str().unwrap_or_default().to_owned());
             lic_info.storage_type = format!("{:?}", disk.kind());
         }
 
@@ -103,17 +95,9 @@ impl RustLock {
         lic_info.n_hash.clone_from(&self.network_lock);
         lic_info.s_hash.clone_from(&self.storage_lock);
 
-        let os_hash = IdBuilder::new(Encryption::SHA256)
-            .add_component(HWIDComponent::OSName)
-            .add_component(HWIDComponent::MachineName)
-            .build(&self.mid_key)
-            .expect("To generate a string");
+        let os_hash = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::OSName).add_component(HWIDComponent::MachineName).build(&self.mid_key).expect("To generate a string");
 
-        if os_hash == lic_info.o_hash {
-            lic_info.to_encrypt_string(&self.info_key)
-        } else {
-            "Failed to generate HWID".to_string()
-        }
+        if os_hash == lic_info.o_hash { lic_info.to_encrypt_string(&self.info_key) } else { "Failed to generate HWID".to_string() }
     }
 
     /// # Errors
@@ -124,8 +108,7 @@ impl RustLock {
         let sk = hex::decode(&self.license_key).expect("decode works ok");
         let current_version = Version::from(&self.version).expect("version is created from const");
 
-        let (_network_lock, storage_lock, cpu_lock, os_lock) =
-            crate::sysinfo::get_locks(&self.mid_key);
+        let (_network_lock, storage_lock, cpu_lock, os_lock) = crate::sysinfo::get_locks(&self.mid_key);
 
         if let Ok(payload) = hex::decode(key) {
             if let Ok(decrypted) = decrypt(&sk, &payload) {
@@ -137,8 +120,7 @@ impl RustLock {
                     if !self.blocked_customer.contains(&lic.customer) {
                         if let Some(max_version) = Version::from(&lic.version) {
                             if current_version <= max_version {
-                                if lic.c1 == os_lock && lic.c2 == cpu_lock && lic.c3 == storage_lock
-                                {
+                                if lic.c1 == os_lock && lic.c2 == cpu_lock && lic.c3 == storage_lock {
                                     return Ok(lic);
                                 } else {
                                     trace!("Hardware Locks Failed to match");
@@ -156,7 +138,7 @@ impl RustLock {
                     trace!("RMP Decode Failed");
                 }
             } else {
-                trace!("Description Failed");
+                trace!("Decryption Failed");
             }
         } else {
             trace!("License Hex Decode Failed");
@@ -167,10 +149,9 @@ impl RustLock {
 
     /// # Errors
     ///
-    /// Will return `Err` if the license isn't valid message as to why its invalid isn't shown
-    /// On purpose
+    /// WARNING This should only be used to read the license details to show who its registered too
     pub fn read_license(&self, key: &str) -> Result<License, RustLockErrors> {
-        let sk = hex::decode(&self.info_key).expect("decode works ok");
+        let sk = hex::decode(&self.license_key).expect("decode works ok");
         if let Ok(payload) = hex::decode(key) {
             if let Ok(decrypted) = decrypt(&sk, &payload) {
                 // MsgPack
@@ -180,7 +161,7 @@ impl RustLock {
                     trace!("RMP Decode Failed");
                 }
             } else {
-                trace!("Description Failed");
+                trace!("Decryption Failed");
             }
         } else {
             trace!("License Hex Decode Failed");
