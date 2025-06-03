@@ -43,7 +43,7 @@ pub async fn show_application_config(pool: &Pool<Sqlite>) -> Result<(), Box<dyn 
     for row in &rows {
         let id: i64 = row.try_get("id")?;
         let name: String = row.try_get("name")?;
-        choices.push(format!("ID {} – {}", id, name));
+        choices.push(format!("ID {id} – {name}"));
     }
 
     // 3) Let the user pick one

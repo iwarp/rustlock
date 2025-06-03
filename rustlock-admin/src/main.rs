@@ -78,6 +78,7 @@ enum UpdateEntity {
     Application,
 }
 
+#[allow(clippy::too_many_lines)]
 #[tokio::main]
 async fn main() {
     println!();
@@ -93,17 +94,15 @@ async fn main() {
     let cli = Cli::parse();
 
     // Determine & prepare data directory
-    let proj_dirs = match ProjectDirs::from("", "Enlighten Systems", "rustlock-admin") {
-        Some(d) => d,
-        None => {
-            error!("Cannot determine data directory via ProjectDirs");
-            process::exit(1);
-        }
+    let Some(proj_dirs) = ProjectDirs::from("", "Enlighten Systems", "rustlock-admin") else {
+        error!("Cannot determine data directory via ProjectDirs");
+        process::exit(1);
     };
+
     let data_dir = proj_dirs.data_dir();
     if !data_dir.exists() {
         if let Err(e) = create_dir_all(data_dir) {
-            error!("Failed to create data directory {:?}: {}", data_dir, e);
+            error!("Failed to create data directory {}: {e}", data_dir.display());
             process::exit(1);
         }
     }
@@ -114,7 +113,7 @@ async fn main() {
 
     if !db_path.exists() {
         if let Err(e) = File::create(&db_path) {
-            error!("Failed to create SQLite file {:?}: {}", db_path, e);
+            error!("Failed to create SQLite file {}: {e}", db_path.display());
             process::exit(1);
         }
     }
@@ -123,14 +122,14 @@ async fn main() {
     let pool = match SqlitePool::connect(&db_url).await {
         Ok(p) => p,
         Err(e) => {
-            error!("Failed to open SQLite via SQLx at {:?}: {}", db_path, e);
+            error!("Failed to open SQLite via SQLx at {}: {e}", db_path.display());
             process::exit(1);
         }
     };
 
     // Ensure tables exist
     if let Err(e) = db::initialize_schema(&pool).await {
-        error!("Failed to initialize database schema: {}", e);
+        error!("Failed to initialize database schema: {e}");
         process::exit(1);
     }
 
@@ -139,13 +138,13 @@ async fn main() {
         Commands::Add { entity } => match entity {
             AddEntity::Customer => {
                 if let Err(e) = customers::add_customer_wizard(&pool).await {
-                    error!("Error in add-customer flow: {}", e);
+                    error!("Error in add-customer flow: {e}");
                     process::exit(1);
                 }
             }
             AddEntity::Application => {
                 if let Err(e) = applications::add_application_wizard(&pool).await {
-                    error!("Error in add-application flow: {}", e);
+                    error!("Error in add-application flow: {e}");
                     process::exit(1);
                 }
             }
@@ -153,56 +152,56 @@ async fn main() {
         Commands::Show { entity } => match entity {
             ShowEntity::Customers => {
                 if let Err(e) = customers::show_customers(&pool).await {
-                    error!("Failed to show customers: {}", e);
+                    error!("Failed to show customers: {e}");
                     process::exit(1);
                 }
             }
             ShowEntity::Applications { config } => {
                 if config {
                     if let Err(e) = applications::show_application_config(&pool).await {
-                        error!("Failed to show applications config: {}", e);
+                        error!("Failed to show applications config: {e}");
                         process::exit(1);
                     }
                 } else if let Err(e) = applications::show_applications(&pool).await {
-                    error!("Failed to show applications: {}", e);
+                    error!("Failed to show applications: {e}");
                     process::exit(1);
                 }
             }
             ShowEntity::Licenses => {
                 if let Err(e) = license::show_licenses(&pool).await {
-                    error!("Failed to show licenses: {}", e);
+                    error!("Failed to show licenses: {e}");
                     process::exit(1);
                 }
             }
         },
         Commands::Issue => {
             if let Err(e) = license::issue_license_wizard(&pool).await {
-                error!("Error in issue-license flow: {}", e);
+                error!("Error in issue-license flow: {e}");
                 process::exit(1);
             }
         }
         Commands::Backup => {
-            if let Err(e) = backup_database(data_dir).await {
-                error!("Backup failed: {}", e);
+            if let Err(e) = backup_database(data_dir) {
+                error!("Backup failed: {e}");
                 process::exit(1);
             }
         }
         Commands::Validate => {
             if let Err(e) = license::validate_license_wizard(&pool).await {
-                error!("Error in validate-license flow: {}", e);
+                error!("Error in validate-license flow: {e}");
                 process::exit(1);
             }
         }
         Commands::Update { entity } => match entity {
             UpdateEntity::Customer => {
                 if let Err(e) = customers::update_customer_wizard(&pool).await {
-                    error!("Error in update-customer flow: {}", e);
+                    error!("Error in update-customer flow: {e}");
                     process::exit(1);
                 }
             }
             UpdateEntity::Application => {
                 if let Err(e) = applications::update_application_wizard(&pool).await {
-                    error!("Error in update-application flow: {}", e);
+                    error!("Error in update-application flow: {e}");
                     process::exit(1);
                 }
             }
@@ -210,11 +209,11 @@ async fn main() {
     }
 }
 
-/// Copy the SQLite database file (and anything else in data_dir) into a ZIP
-async fn backup_database(data_dir: &Path) -> io::Result<()> {
+/// Copy the `SQLite` database file (and anything else in `data_dir`) into a ZIP
+fn backup_database(data_dir: &Path) -> io::Result<()> {
     // Create a timestamped backup ZIP in the current working directory
     let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
-    let backup_file_name = format!("rustlock-backup-{}.zip", timestamp);
+    let backup_file_name = format!("rustlock-backup-{timestamp}.zip");
     let backup_path = env::current_dir()?.join(&backup_file_name);
 
     // Create the ZIP file (this can fail with an io::Error)
@@ -247,6 +246,6 @@ async fn backup_database(data_dir: &Path) -> io::Result<()> {
     // Finish writing the ZIP (returns a zip::result::ZipError if something went wrong)
     zip.finish().map_err(io::Error::other)?;
 
-    println!("✅ Backup created at: {:?}", backup_path);
+    println!("✅ Backup created at: {}", backup_path.display());
     Ok(())
 }

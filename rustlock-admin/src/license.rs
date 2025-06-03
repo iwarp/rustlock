@@ -5,7 +5,7 @@ use dialoguer::{Input, Select, theme::ColorfulTheme};
 use ecies::{decrypt, encrypt};
 use log::{error, info};
 use rustlock_core::{RustLock, license::License, sysinfo::SysInfo};
-use sqlx::{Pool, Sqlite};
+use sqlx::{Pool, Row, Sqlite};
 use version_compare::Version;
 
 /// Interactive wizard to issue a license
@@ -82,11 +82,11 @@ pub async fn issue_license_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Err
 
     let mut lic = License::default();
 
-    lic.name = chosen_cust.name.clone();
-
     let current_version = Version::from(&version).unwrap();
     // set max version
     lic.version = current_version.part(0).unwrap().to_string() + "." + &current_version.part(1).unwrap().to_string() + ".9999";
+
+    lic.name.clone_from(&chosen_cust.name);
 
     let date = Utc::now();
 
@@ -202,4 +202,78 @@ fn decode_hwinfo_from_string(input: &str, public_key: &str) -> Option<SysInfo> {
     };
 
     rmp_serde::from_read::<&[u8], SysInfo>(&*decrypted).ok()
+}
+
+/// Show all licenses for a selected application and customer.
+/// Since HWID and `issued_license` strings can be very long, each record is printed in full without a table.
+pub async fn show_licenses(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Error>> {
+    let theme = ColorfulTheme::default();
+
+    // 1) Select an application
+    let apps = crate::db::fetch_applications(pool).await?;
+    if apps.is_empty() {
+        println!("⚠️  No applications found.");
+        return Ok(());
+    }
+    let app_choices: Vec<String> = apps.iter().map(|app| format!("ID {} – {}", app.id, app.name)).collect();
+    let app_selection = Select::with_theme(&theme).with_prompt("Select application to view licenses for").default(0).items(&app_choices).interact()?;
+    let chosen_app = &apps[app_selection];
+
+    // 2) Select a customer
+    let customers = crate::db::fetch_customers(pool).await?;
+    if customers.is_empty() {
+        println!("⚠️  No customers found.");
+        return Ok(());
+    }
+    let cust_choices: Vec<String> = customers.iter().map(|c| format!("ID {} – {}", c.id, c.name)).collect();
+    let cust_selection = Select::with_theme(&theme).with_prompt("Select customer to view licenses for").default(0).items(&cust_choices).interact()?;
+    let chosen_cust = &customers[cust_selection];
+
+    // 3) Query licenses for the chosen app/customer
+    let rows = sqlx::query(
+        r#"
+        SELECT
+          id,
+          hwid,
+          support_years,
+          issued_license
+        FROM licenses
+        WHERE application_id = ?1
+          AND customer_id = ?2
+        ORDER BY id
+        "#,
+    )
+    .bind(chosen_app.id)
+    .bind(chosen_cust.id)
+    .fetch_all(pool)
+    .await?;
+
+    if rows.is_empty() {
+        println!("⚠️  No licenses found for application '{}' (ID {}) and customer '{}' (ID {}).", chosen_app.name, chosen_app.id, chosen_cust.name, chosen_cust.id);
+        return Ok(());
+    }
+
+    println!();
+    println!("—— Licenses for App '{}' (ID {}) and Customer '{}' (ID {}) ——————————", chosen_app.name, chosen_app.id, chosen_cust.name, chosen_cust.id);
+    println!();
+    println!("────────────────────────────────────────────────────────────────");
+
+    // 4) Print each license record in full
+    for row in &rows {
+        let license_id: i64 = row.try_get("id")?;
+        let hwid: String = row.try_get("hwid")?;
+        let support_years: i32 = row.try_get("support_years")?;
+        let issued_license: String = row.try_get("issued_license")?;
+
+        println!("License ID       : {license_id}");
+        println!("Support Years    : {support_years}");
+        println!();
+        println!("HWID             : {hwid}");
+        println!();
+        println!("Issued License   : {issued_license}");
+        println!("────────────────────────────────────────────────────────────────");
+    }
+
+    info!("Displayed {} license(s) for app {} and customer {}.", rows.len(), chosen_app.id, chosen_cust.id);
+    Ok(())
 }

@@ -27,6 +27,7 @@ pub struct RustLock {
 }
 
 impl RustLock {
+    #[must_use]
     pub fn new(license_key: String, blocked_customer: Vec<u16>, version: String, mid_key: String, info_key: String) -> Self {
         let (network_lock, storage_lock, cpu_lock, os_lock) = sysinfo::get_locks(&mid_key);
 

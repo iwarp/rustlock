@@ -27,17 +27,6 @@ pub struct Application {
     pub feature5: Option<String>,
 }
 
-/// License placeholder (stub)
-#[derive(Debug)]
-pub struct License {
-    pub id: i64,
-    pub hwid: String,
-    pub support_years: i32,
-    pub name: String,
-    pub customer_id: i64,
-    pub application_id: i64,
-}
-
 /// Create tables if they do not exist yet
 pub async fn initialize_schema(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
     // customers
