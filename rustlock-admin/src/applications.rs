@@ -80,11 +80,11 @@ pub async fn show_application_config(pool: &Pool<Sqlite>) -> Result<(), Box<dyn 
 
     // Print each feature; if None, show as empty string
     println!("// Feature names (empty if none):");
-    println!("let feature1 = \"{}\".to_string();", feature1.clone().unwrap_or_default());
-    println!("let feature2 = \"{}\".to_string();", feature2.clone().unwrap_or_default());
-    println!("let feature3 = \"{}\".to_string();", feature3.clone().unwrap_or_default());
-    println!("let feature4 = \"{}\".to_string();", feature4.clone().unwrap_or_default());
-    println!("let feature5 = \"{}\".to_string();", feature5.clone().unwrap_or_default());
+    println!("let feature1 = \"{}\".to_string();", feature1.unwrap_or_default());
+    println!("let feature2 = \"{}\".to_string();", feature2.unwrap_or_default());
+    println!("let feature3 = \"{}\".to_string();", feature3.unwrap_or_default());
+    println!("let feature4 = \"{}\".to_string();", feature4.unwrap_or_default());
+    println!("let feature5 = \"{}\".to_string();", feature5.unwrap_or_default());
     println!();
 
     println!("let lock = RustLock::new(");
@@ -139,7 +139,7 @@ pub async fn show_applications(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
     Ok(())
 }
 
-fn sixty_four() -> usize {
+const fn sixty_four() -> usize {
     64
 }
 

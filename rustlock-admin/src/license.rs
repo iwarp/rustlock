@@ -8,6 +8,7 @@ use rustlock_core::{RustLock, license::License, sysinfo::SysInfo};
 use sqlx::{Pool, Row, Sqlite};
 use version_compare::Version;
 
+#[allow(clippy::too_many_lines)]
 /// Interactive wizard to issue a license
 pub async fn issue_license_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Error>> {
     let theme = ColorfulTheme::default();
