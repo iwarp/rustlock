@@ -6,7 +6,6 @@ package.authors = ["@iwarp", "Enlighten Systems"]
 
 members = [
     "rustlock-core",
-    "rustlock-generator",
     "examples"
 , "rustlock-admin"]
 exclude = []
