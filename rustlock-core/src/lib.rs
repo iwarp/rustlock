@@ -1,5 +1,4 @@
 #![allow(clippy::redundant_else)]
-
 use ::sysinfo::{Disks, Networks, System};
 use ecies::decrypt;
 use license::License;
@@ -27,11 +26,12 @@ pub struct RustLock {
 }
 
 impl RustLock {
-    #[must_use]
-    pub fn new(license_key: String, blocked_customer: Vec<u16>, version: String, mid_key: String, info_key: String) -> Self {
-        let (network_lock, storage_lock, cpu_lock, os_lock) = sysinfo::get_locks(&mid_key);
+    /// # Errors
+    /// Will return `Err` if the we cant generate a fingerprint for this pc
+    pub fn new(license_key: String, blocked_customer: Vec<u16>, version: String, mid_key: String, info_key: String) -> Result<Self, RustLockErrors> {
+        let (network_lock, storage_lock, cpu_lock, os_lock) = sysinfo::get_locks(&mid_key)?;
 
-        Self {
+        Ok(Self {
             license_key,
             blocked_customer,
             version,
@@ -42,10 +42,13 @@ impl RustLock {
             storage_lock,
             cpu_lock,
             os_lock,
-        }
+        })
     }
 
-    pub fn get_system_fingerprint(&self) -> String {
+    /// Gets the systems fingerprint and encrypts
+    /// # Errors
+    /// Will return `Err` if the we cant generate a fingerprint for this pc
+    pub fn get_system_fingerprint(&self) -> Result<String, Box<dyn std::error::Error>> {
         let mut sys = System::new_all();
 
         // First we update all information of our `System` struct.
@@ -96,53 +99,41 @@ impl RustLock {
         lic_info.n_hash.clone_from(&self.network_lock);
         lic_info.s_hash.clone_from(&self.storage_lock);
 
-        let os_hash = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::OSName).add_component(HWIDComponent::MachineName).build(&self.mid_key).expect("To generate a string");
+        let os_hash = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::OSName).add_component(HWIDComponent::MachineName).build(&self.mid_key)?;
 
-        if os_hash == lic_info.o_hash { lic_info.to_encrypt_string(&self.info_key) } else { "Failed to generate HWID".to_string() }
+        // check that the os_hash matches the one generated at launch
+        if os_hash == lic_info.o_hash { Ok(lic_info.to_encrypt_string(&self.info_key)) } else { Err(Box::new(RustLockErrors::HWInfoFailed)) }
     }
 
     /// # Errors
-    ///
-    /// Will return `Err` if the license isn't valid message as to why its invalid isn't shown
-    /// On purpose
-    pub fn validate_license(&self, key: &str) -> Result<License, RustLockErrors> {
-        let sk = hex::decode(&self.license_key).expect("decode works ok");
-        let current_version = Version::from(&self.version).expect("version is created from const");
+    /// Will return `Err` if the license isn't valid message as to why its invalid isn't shown on purpose
+    pub fn validate_license(&self, license: &str) -> Result<License, RustLockErrors> {
+        let Some(current_version) = Version::from(&self.version) else {
+            return Err(RustLockErrors::InvalidVersion);
+        };
 
-        let (_network_lock, storage_lock, cpu_lock, os_lock) = crate::sysinfo::get_locks(&self.mid_key);
+        let (_network_lock, storage_lock, cpu_lock, os_lock) = crate::sysinfo::get_locks(&self.mid_key)?;
 
-        if let Ok(payload) = hex::decode(key) {
-            if let Ok(decrypted) = decrypt(&sk, &payload) {
-                // MsgPack
-                if let Ok(lic) = rmp_serde::from_read::<&[u8], License>(&*decrypted) {
-                    trace!("License: {:?}", lic);
+        let lic = self.read_license(license)?;
 
-                    #[allow(clippy::if_not_else)]
-                    if !self.blocked_customer.contains(&lic.customer) {
-                        if let Some(max_version) = Version::from(&lic.version) {
-                            if current_version <= max_version {
-                                if lic.c1 == os_lock && lic.c2 == cpu_lock && lic.c3 == storage_lock {
-                                    return Ok(lic);
-                                } else {
-                                    trace!("Hardware Locks Failed to match");
-                                }
-                            } else {
-                                trace!("License Version {} <= {}", current_version, max_version);
-                            }
-                        } else {
-                            trace!("License Version Decode Failed");
-                        }
-                    } else {
-                        trace!("License Blocked Customer");
-                    }
-                } else {
-                    trace!("RMP Decode Failed");
-                }
+        if self.blocked_customer.contains(&lic.customer) {
+            trace!("License Blocked Customer");
+            return Err(RustLockErrors::InvalidKey);
+        }
+
+        let Some(max_version) = Version::from(&lic.version) else {
+            trace!("License Version Decode Failed");
+            return Err(RustLockErrors::InvalidKey);
+        };
+
+        if current_version <= max_version {
+            if lic.c1 == os_lock && lic.c2 == cpu_lock && lic.c3 == storage_lock {
+                return Ok(lic);
             } else {
-                trace!("Decryption Failed");
+                trace!("Hardware Locks Failed to match");
             }
         } else {
-            trace!("License Hex Decode Failed");
+            trace!("License Version {current_version} <= {max_version}");
         }
 
         Err(RustLockErrors::InvalidKey)
@@ -151,23 +142,28 @@ impl RustLock {
     /// # Errors
     ///
     /// WARNING This should only be used to read the license details to show who its registered too
-    pub fn read_license(&self, key: &str) -> Result<License, RustLockErrors> {
-        let sk = hex::decode(&self.license_key).expect("decode works ok");
-        if let Ok(payload) = hex::decode(key) {
-            if let Ok(decrypted) = decrypt(&sk, &payload) {
-                // MsgPack
-                if let Ok(lic) = rmp_serde::from_read::<&[u8], License>(&*decrypted) {
-                    return Ok(lic);
-                } else {
-                    trace!("RMP Decode Failed");
-                }
-            } else {
-                trace!("Decryption Failed");
-            }
-        } else {
-            trace!("License Hex Decode Failed");
-        }
+    pub fn read_license(&self, license: &str) -> Result<License, RustLockErrors> {
+        let Ok(sk) = hex::decode(&self.license_key) else {
+            trace!("License Public Key Failed");
+            return Err(RustLockErrors::InvalidPublicKey);
+        };
 
-        Err(RustLockErrors::InvalidKey)
+        let Ok(payload) = hex::decode(license) else {
+            trace!("License Hex Decode Failed");
+            return Err(RustLockErrors::InvalidHexDecode);
+        };
+
+        let Ok(decrypted) = decrypt(&sk, &payload) else {
+            trace!("Decryption Failed");
+            return Err(RustLockErrors::InvalidDecrypt);
+        };
+
+        // MsgPack
+        let Ok(lic) = rmp_serde::from_read::<&[u8], License>(&*decrypted) else {
+            trace!("RMP Decode Failed");
+            return Err(RustLockErrors::InvalidKey);
+        };
+
+        Ok(lic)
     }
 }

@@ -285,9 +285,9 @@ pub async fn add_application_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn E
     let blocked_customer_ids: Vec<u16> = vec![9999];
     let blocked_ids_json = json_to_string(&blocked_customer_ids).unwrap();
 
-    let lock = RustLock::new(lic_public_key.clone(), blocked_customer_ids.clone(), "0.0.1".to_string(), machine_id_key.clone(), info_private_key.clone());
+    let lock = RustLock::new(lic_public_key.clone(), blocked_customer_ids.clone(), "0.0.1".to_string(), machine_id_key.clone(), info_private_key.clone())?;
 
-    let fingerprint = lock.get_system_fingerprint();
+    let fingerprint = lock.get_system_fingerprint()?;
 
     // Prompt for feature1..feature5 (each may be left blank)
     let feature1: String = Input::with_theme(&theme).with_prompt("Feature1 name (leave blank if none)").allow_empty(true).interact_text()?;

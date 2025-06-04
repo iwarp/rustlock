@@ -119,7 +119,7 @@ pub async fn issue_license_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Err
     info!("Generated License: {encrypted_string}");
     println!();
 
-    let lock = RustLock::new(chosen_app.lic_public_key.clone(), chosen_app.blocked_customer_ids.clone(), version, chosen_app.machine_id_key.clone(), chosen_app.info_private_key.clone());
+    let lock = RustLock::new(chosen_app.lic_public_key.clone(), chosen_app.blocked_customer_ids.clone(), version, chosen_app.machine_id_key.clone(), chosen_app.info_private_key.clone())?;
 
     let valid_lic = lock.validate_license(&encrypted_string)?;
 
@@ -157,7 +157,7 @@ pub async fn issue_license_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Err
 }
 
 /// Interactive wizard to validate a license
-pub async fn validate_license_wizard(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
+pub async fn validate_license_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn std::error::Error>> {
     let theme = ColorfulTheme::default();
 
     // 1) Select application context
@@ -175,7 +175,7 @@ pub async fn validate_license_wizard(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
 
     let version_str: String = Input::with_theme(&theme).with_prompt("Enter app version validate").interact_text().unwrap();
 
-    let lock = RustLock::new(chosen_app.lic_public_key.clone(), chosen_app.blocked_customer_ids.clone(), version_str, chosen_app.machine_id_key.clone(), chosen_app.info_private_key.clone());
+    let lock = RustLock::new(chosen_app.lic_public_key.clone(), chosen_app.blocked_customer_ids.clone(), version_str, chosen_app.machine_id_key.clone(), chosen_app.info_private_key.clone())?;
 
     match lock.read_license(&lic_str) {
         Ok(_) => println!("✅ License string is VALID but not Validated."),

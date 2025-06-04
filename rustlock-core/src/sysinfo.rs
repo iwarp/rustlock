@@ -3,17 +3,24 @@ use machineid_rs::HWIDComponent;
 use machineid_rs::{Encryption, IdBuilder};
 use serde::{Deserialize, Serialize};
 
-#[must_use]
-pub fn get_locks(mid_key: &str) -> (String, String, String, String) {
-    let net_lock = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::MacAddress).build(mid_key).expect("To generate a string");
+use crate::error::RustLockErrors;
 
-    let storage_lock = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::DriveSerial).build(mid_key).expect("To generate a string");
+/// # Errors
+/// Will return `Err` if the we cant generate a fingerprint for this pc
+pub fn get_locks(mid_key: &str) -> Result<(String, String, String, String), RustLockErrors> {
+    let net_lock = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::MacAddress).build(mid_key).map_err(|_| RustLockErrors::HWInfoFailed)?;
 
-    let cpu_lock = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::CPUID).add_component(HWIDComponent::CPUCores).build(mid_key).expect("To generate a string");
+    let storage_lock = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::DriveSerial).build(mid_key).map_err(|_| RustLockErrors::HWInfoFailed)?;
 
-    let os_lock = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::OSName).add_component(HWIDComponent::MachineName).build(mid_key).expect("To generate a string");
+    let cpu_lock = IdBuilder::new(Encryption::SHA256).add_component(HWIDComponent::CPUID).add_component(HWIDComponent::CPUCores).build(mid_key).map_err(|_| RustLockErrors::HWInfoFailed)?;
 
-    (net_lock, storage_lock, cpu_lock, os_lock)
+    let os_lock = IdBuilder::new(Encryption::SHA256)
+        .add_component(HWIDComponent::OSName)
+        .add_component(HWIDComponent::MachineName)
+        .build(mid_key)
+        .map_err(|_| RustLockErrors::HWInfoFailed)?;
+
+    Ok((net_lock, storage_lock, cpu_lock, os_lock))
 }
 
 #[derive(Serialize, Deserialize, Default, Debug, Eq, PartialEq, Clone)]
