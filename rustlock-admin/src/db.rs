@@ -31,20 +31,20 @@ pub struct Application {
 pub async fn initialize_schema(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
     // customers
     sqlx::query(
-        r#"
+        r"
         CREATE TABLE IF NOT EXISTS customers (
             id            INTEGER PRIMARY KEY AUTOINCREMENT,
             name          TEXT NOT NULL,
             contact_email TEXT NOT NULL,
             mobile        TEXT NOT NULL
-        )"#,
+        )",
     )
     .execute(pool)
     .await?;
 
     // applications
     sqlx::query(
-        r#"
+        r"
         CREATE TABLE IF NOT EXISTS applications (
             id                    INTEGER PRIMARY KEY AUTOINCREMENT,
             name                  TEXT NOT NULL,
@@ -59,14 +59,14 @@ pub async fn initialize_schema(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
             feature3              TEXT,
             feature4              TEXT,
             feature5              TEXT
-        )"#,
+        )",
     )
     .execute(pool)
     .await?;
 
     // licenses (placeholder)
     sqlx::query(
-        r#"
+        r"
         CREATE TABLE IF NOT EXISTS licenses (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             hwid            TEXT NOT NULL,
@@ -77,7 +77,7 @@ pub async fn initialize_schema(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
             issued_license  TEXT, 
             FOREIGN KEY(customer_id) REFERENCES customers(id),
             FOREIGN KEY(application_id) REFERENCES applications(id)
-        )"#,
+        )",
     )
     .execute(pool)
     .await?;
@@ -104,7 +104,7 @@ pub async fn fetch_customers(pool: &Pool<Sqlite>) -> sqlx::Result<Vec<Customer>>
 /// Fetch all applications from the database
 pub async fn fetch_applications(pool: &Pool<Sqlite>) -> sqlx::Result<Vec<Application>> {
     let rows = sqlx::query(
-        r#"
+        r"
         SELECT 
             id, 
             name,
@@ -120,7 +120,7 @@ pub async fn fetch_applications(pool: &Pool<Sqlite>) -> sqlx::Result<Vec<Applica
             feature4,
             feature5
         FROM applications
-        "#,
+        ",
     )
     .fetch_all(pool)
     .await?;

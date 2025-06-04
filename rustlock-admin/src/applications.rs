@@ -11,7 +11,7 @@ use sqlx::{Pool, Row, Sqlite};
 pub async fn show_application_config(pool: &Pool<Sqlite>) -> Result<(), Box<dyn std::error::Error>> {
     // 1) Fetch all columns of each application, including the five feature columns
     let rows = sqlx::query(
-        r#"
+        r"
         SELECT
           id,
           name,
@@ -28,7 +28,7 @@ pub async fn show_application_config(pool: &Pool<Sqlite>) -> Result<(), Box<dyn 
           feature5
         FROM applications
         ORDER BY id
-        "#,
+        ",
     )
     .fetch_all(pool)
     .await?;
@@ -66,13 +66,13 @@ pub async fn show_application_config(pool: &Pool<Sqlite>) -> Result<(), Box<dyn 
 
     // 6) Print everything out, including features
     println!();
-    println!("—— Application Config for {}  - ID {} —————————————", name, id);
+    println!("—— Application Config for {name}  - ID {id} —————————————");
     println!();
 
     println!("// Copy and paste the following into your application:");
-    println!("let license_public_key = \"{}\".to_string();", lic_pub);
-    println!("let machine_key = \"{}\".to_string();", machine_key);
-    println!("let info_private_key = \"{}\".to_string(); // Info encrypted on client side", info_priv);
+    println!("let license_public_key = \"{lic_pub}\".to_string();");
+    println!("let machine_key = \"{machine_key}\".to_string();");
+    println!("let info_private_key = \"{info_priv}\".to_string(); // Info encrypted on client side");
     println!();
     println!("let blocked_customers = vec![9999]; // Example Block Customer 9999");
     println!("let version = env!(\"CARGO_PKG_VERSION\").to_string();");
@@ -106,7 +106,7 @@ pub async fn show_application_config(pool: &Pool<Sqlite>) -> Result<(), Box<dyn 
 pub async fn show_applications(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
     // Aggregate query: count total licenses and distinct customers per application
     let rows = sqlx::query(
-        r#"
+        r"
         SELECT 
             a.id,
             a.name,
@@ -117,7 +117,7 @@ pub async fn show_applications(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
           ON a.id = l.application_id
         GROUP BY a.id, a.name
         ORDER BY a.id
-        "#,
+        ",
     )
     .fetch_all(pool)
     .await?;
@@ -132,7 +132,7 @@ pub async fn show_applications(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         let license_count: i64 = row.try_get("license_count")?;
         let customer_count: i64 = row.try_get("customer_count")?;
 
-        println!("{:<6} | {:<20} | {:<15} | {:<15}", id, name, customer_count, license_count);
+        println!("{id:<6} | {name:<20} | {customer_count:<15} | {license_count:<15}");
     }
 
     println!("{}", "-".repeat(sixty_four()));
@@ -224,7 +224,7 @@ pub async fn update_application_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dy
 
     // 4) Run the UPDATE statement (now including feature1..feature5)
     sqlx::query(
-        r#"
+        r"
         UPDATE applications
         SET
           name                = ?1,
@@ -239,7 +239,7 @@ pub async fn update_application_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dy
           feature4            = ?10,
           feature5            = ?11
         WHERE id = ?12
-        "#,
+        ",
     )
     .bind(&new_name)
     .bind(&new_lic_pub)
@@ -305,10 +305,10 @@ pub async fn add_application_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn E
 
     // Show all stub values & ask for confirmation
     info!("Generated the following stub fields for the new application:");
-    println!("• lic_public_key: {}", lic_public_key);
-    println!("• info_public_key: {}", info_public_key);
-    println!("• machine_id_key: {}", machine_id_key);
-    println!("• blocked_customer_ids: {:?}", blocked_customer_ids);
+    println!("• lic_public_key: {lic_public_key}");
+    println!("• info_public_key: {info_public_key}");
+    println!("• machine_id_key: {machine_id_key}");
+    println!("• blocked_customer_ids: {blocked_customer_ids:?}");
     println!("• fingerprint test: {fingerprint}");
     println!();
 
@@ -330,7 +330,7 @@ pub async fn add_application_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn E
 
     // Insert into DB, including feature1..feature5
     sqlx::query(
-        r#"
+        r"
         INSERT INTO applications (
             name,
             lic_public_key,
@@ -346,7 +346,7 @@ pub async fn add_application_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn E
             feature5
         )
         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
-        "#,
+        ",
     )
     .bind(&name)
     .bind(&lic_public_key)

@@ -15,7 +15,7 @@ pub async fn show_customers(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
         let name: String = row.try_get("name")?;
         let email: String = row.try_get("contact_email")?;
         let mobile: String = row.try_get("mobile")?;
-        println!("{:<6} | {:<20} | {:<30} | {:<15}", id, name, email, mobile);
+        println!("{id:<6} | {name:<20} | {email:<30} | {mobile:<15}");
     }
 
     Ok(())
@@ -40,10 +40,10 @@ pub async fn add_customer_wizard(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
 
     // 4) Insert into database
     sqlx::query(
-        r#"
+        r"
         INSERT INTO customers (name, contact_email, mobile)
         VALUES (?1, ?2, ?3)
-        "#,
+        ",
     )
     .bind(&name)
     .bind(&contact_email)
@@ -91,13 +91,13 @@ pub async fn update_customer_wizard(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
 
     // 4) Run the UPDATE query
     sqlx::query(
-        r#"
+        r"
         UPDATE customers
         SET name = ?1,
             contact_email = ?2,
             mobile = ?3
         WHERE id = ?4
-        "#,
+        ",
     )
     .bind(&new_name)
     .bind(&new_email)

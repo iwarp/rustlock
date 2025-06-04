@@ -55,23 +55,23 @@ pub async fn issue_license_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Err
     let mut include_feature5 = false;
 
     if let Some(feat1_name) = &chosen_app.feature1 {
-        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{}'?", feat1_name)).default(0).items(&["No", "Yes"]).interact().unwrap();
+        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{feat1_name}'?")).default(0).items(&["No", "Yes"]).interact().unwrap();
         include_feature1 = ans == 1;
     }
     if let Some(feat2_name) = &chosen_app.feature2 {
-        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{}'?", feat2_name)).default(0).items(&["No", "Yes"]).interact().unwrap();
+        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{feat2_name}'?")).default(0).items(&["No", "Yes"]).interact().unwrap();
         include_feature2 = ans == 1;
     }
     if let Some(feat3_name) = &chosen_app.feature3 {
-        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{}'?", feat3_name)).default(0).items(&["No", "Yes"]).interact().unwrap();
+        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{feat3_name}'?")).default(0).items(&["No", "Yes"]).interact().unwrap();
         include_feature3 = ans == 1;
     }
     if let Some(feat4_name) = &chosen_app.feature4 {
-        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{}'?", feat4_name)).default(0).items(&["No", "Yes"]).interact().unwrap();
+        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{feat4_name}'?")).default(0).items(&["No", "Yes"]).interact().unwrap();
         include_feature4 = ans == 1;
     }
     if let Some(feat5_name) = &chosen_app.feature5 {
-        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{}'?", feat5_name)).default(0).items(&["No", "Yes"]).interact().unwrap();
+        let ans = Select::with_theme(&theme).with_prompt(format!("Include feature '{feat5_name}'?")).default(0).items(&["No", "Yes"]).interact().unwrap();
         include_feature5 = ans == 1;
     }
 
@@ -128,7 +128,7 @@ pub async fn issue_license_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Err
 
     // Insert into licenses
     sqlx::query(
-        r#"
+        r"
         INSERT INTO licenses (
             hwid,
             support_years,
@@ -137,7 +137,7 @@ pub async fn issue_license_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Err
             issued_license
         )
         VALUES (?1, ?2, ?3, ?4, ?5)
-        "#,
+        ",
     )
     .bind(&hwid)
     .bind(support_years)
@@ -231,7 +231,7 @@ pub async fn show_licenses(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Error>> {
 
     // 3) Query licenses for the chosen app/customer
     let rows = sqlx::query(
-        r#"
+        r"
         SELECT
           id,
           hwid,
@@ -241,7 +241,7 @@ pub async fn show_licenses(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Error>> {
         WHERE application_id = ?1
           AND customer_id = ?2
         ORDER BY id
-        "#,
+        ",
     )
     .bind(chosen_app.id)
     .bind(chosen_cust.id)
