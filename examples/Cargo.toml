@@ -6,3 +6,6 @@ edition.workspace = true
 [[bin]]
 name = "simple"
 path = "src/simple.rs"
+
+[dependencies]
+rustlock-core = { path = "../rustlock-core" }
