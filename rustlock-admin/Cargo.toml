@@ -3,6 +3,8 @@ name = "rustlock-admin"
 edition.workspace = true
 version.workspace = true
 authors.workspace = true
+license.workspace = true
+license-file.workspace = true
 
 [dependencies]
 clap = { version = "4.5.39", features = ["derive"] }

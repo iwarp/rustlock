@@ -3,6 +3,8 @@ resolver = "3"
 package.edition = "2024"
 package.version = "0.1.0"
 package.authors = ["@iwarp", "Enlighten Systems"]
+package.license = "MIT"
+package.license-file = "LICENSE"
 
 members = [
     "rustlock-core",
