@@ -1,7 +1,8 @@
 # RustLock
 
 RustLock provides hardware-locked licensing for Rust applications.
-Licenses are tied to a specific machine and verified locally at runtime. All validation uses secure public/private key encryption so your apps run entirely offline.
+Licenses are tied to a specific machine and verified locally at runtime. 
+All validations uses secure public/private key encryption so your apps can run offline.
 
 ## Why RustLock?
 
@@ -13,11 +14,14 @@ machines can run your software.
 ## Overview
 
 1. **Generate a fingerprint** – Your application calls `get_system_fingerprint()`
-   and sends the resulting string to your licensing server.
+   and sends the resulting string to your licensing team or via an API.
 2. **Issue a license** – Use the `rustlock-admin` CLI to create customers,
    manage applications and produce license strings for each fingerprint.
 3. **Validate on startup** – Ship the license string with your application and
    call `validate_license()` to ensure the machine and version match.
+
+## Roadmap
+Support API Based integration and online validations
 
 ### Using `rustlock-core`
 
@@ -43,8 +47,15 @@ let fingerprint = lock.get_system_fingerprint().unwrap();
 // send `fingerprint` to your vendor and receive a license string
 
 // later validate the license
-let license = "<issued license>";
-let license_info = lock.validate_license(&license).unwrap();
+let license_string = "<issued license>";
+let license = lock.validate_license(&license_string).unwrap();
+
+println!("License validated for: {}", license.name);
+println!("Feature 1 enabled: {}", license.f1);
+println!("Feature 2 enabled: {}", license.f2);
+println!("Feature 3 enabled: {}", license.f3);
+println!("Feature 4 enabled: {}", license.f4);
+println!("Feature 5 enabled: {}", license.f5);
 ```
 
 ### Using `rustlock-admin`
