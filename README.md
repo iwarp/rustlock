@@ -1,6 +1,6 @@
 # RustLock
 
-RustLock provides hardware-locked licensing for Rust applications.
+RustLock provides multi-OS hardware-locked licensing for Rust applications.
 Licenses are tied to a specific machine and verified locally at runtime. 
 All validations uses secure public/private key encryption so your apps can run offline.
 

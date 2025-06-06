@@ -121,7 +121,7 @@ pub async fn issue_license_wizard(pool: &Pool<Sqlite>) -> Result<(), Box<dyn Err
 
     let lock = RustLock::new(chosen_app.lic_public_key.clone(), chosen_app.blocked_customer_ids.clone(), version, chosen_app.machine_id_key.clone(), chosen_app.info_private_key.clone())?;
 
-    let valid_lic = lock.validate_license(&encrypted_string)?;
+    let valid_lic = lock.read_license(&encrypted_string)?;
 
     println!();
     info!("License: {valid_lic:#?}");

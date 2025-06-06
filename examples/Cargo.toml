@@ -1,7 +1,11 @@
 [package]
 name = "examples"
-version.workspace = true
-edition.workspace = true
+edition = "2024"
+version = "0.1.0"
+authors = ["@iwarp", "Enlighten Systems"]
+license = "MIT"
+license-file = "../LICENSE"
+homepage = "https://github.com/iwarp/rustlock"
 
 [[bin]]
 name = "simple"

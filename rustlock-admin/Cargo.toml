@@ -1,10 +1,13 @@
 [package]
 name = "rustlock-admin"
-edition.workspace = true
-version.workspace = true
-authors.workspace = true
-license.workspace = true
-license-file.workspace = true
+edition = "2024"
+version = "0.1.0"
+authors = ["@iwarp", "Enlighten Systems"]
+license = "MIT"
+license-file = "../LICENSE"
+homepage = "https://github.com/iwarp/rustlock"
+description = "Interactive CLI to manage applications and customers, issuing hardware‑locked licenses via SQLite."
+keywords = ["license", "hardware", "fingerprint", "encryption", "offline", "feature flags", "cli"]
 
 [dependencies]
 clap = { version = "4.5.39", features = ["derive"] }

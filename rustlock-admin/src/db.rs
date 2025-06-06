@@ -71,7 +71,6 @@ pub async fn initialize_schema(pool: &Pool<Sqlite>) -> sqlx::Result<()> {
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             hwid            TEXT NOT NULL,
             support_years   INTEGER NOT NULL,
-            name            TEXT NOT NULL,
             customer_id     INTEGER NOT NULL,
             application_id  INTEGER NOT NULL,
             issued_license  TEXT, 
