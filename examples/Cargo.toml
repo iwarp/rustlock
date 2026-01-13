@@ -3,7 +3,6 @@ name = "examples"
 edition = "2024"
 version = "0.1.0"
 authors = ["@iwarp", "Enlighten Systems"]
-license = "MIT"
 license-file = "../LICENSE"
 homepage = "https://github.com/iwarp/rustlock"
 

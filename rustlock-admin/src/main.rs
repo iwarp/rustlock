@@ -82,9 +82,9 @@ enum UpdateEntity {
 #[tokio::main]
 async fn main() {
     println!();
-    println!("{}", " =====================================".green().bold());
-    println!("{}", " |       RustLock Admin App          |".green().bold());
-    println!("{}", " =====================================".green().bold());
+    println!("{}", " =====================================".blue().bold());
+    println!("{}", " |       RustLock Admin App          |".white().bold());
+    println!("{}", " =====================================".blue().bold());
     println!();
 
     // Initialize logging (default to "info")

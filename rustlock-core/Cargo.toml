@@ -3,7 +3,6 @@ name = "rustlock-core"
 edition = "2024"
 version = "0.1.0"
 authors = ["@iwarp", "Enlighten Systems"]
-license = "MIT"
 license-file = "../LICENSE"
 homepage = "https://github.com/iwarp/rustlock"
 description = "Library for generating secure hardware fingerprints and validating encrypted licenses offline."
@@ -14,7 +13,7 @@ keywords = ["license", "hardware", "fingerprint", "encryption", "offline", "feat
 ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 hex = "0.4.3"
 version-compare = "0.2.0"
-sysinfo="0.35.1"
+sysinfo="0.37.2"
 
 machineid-rs = "1.2.4"
 thiserror="2.0.12"
