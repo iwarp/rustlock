@@ -1,20 +1,20 @@
 [package]
 name = "rustlock-admin"
 edition = "2024"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["@iwarp", "Enlighten Systems"]
 license-file = "../LICENSE"
 homepage = "https://github.com/iwarp/rustlock"
-description = "Interactive CLI to manage applications and customers, issuing hardware‑locked licenses via SQLite."
+description = "Interactive CLI to manage applications and customers, issuing hardware locked licenses via SQLite."
 keywords = ["license", "hardware", "fingerprint", "encryption", "offline", "feature flags", "cli"]
 
 [dependencies]
 clap = { version = "4.5.39", features = ["derive"] }
-dialoguer = "0.11.0"
+dialoguer = "0.12.0"
 directories = "6.0.0"
 log = "0.4"
 env_logger = "0.11.8"
-zip = "0.6.6"
+zip = "8.6.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rmp-serde = "1.3.0"

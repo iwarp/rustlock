@@ -9,7 +9,7 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::{env, process};
 use walkdir::WalkDir;
-use zip::write::FileOptions;
+use zip::write::SimpleFileOptions;
 
 mod applications;
 mod customers;
@@ -100,22 +100,22 @@ async fn main() {
     };
 
     let data_dir = proj_dirs.data_dir();
-    if !data_dir.exists() {
-        if let Err(e) = create_dir_all(data_dir) {
-            error!("Failed to create data directory {}: {e}", data_dir.display());
-            process::exit(1);
-        }
+    if !data_dir.exists()
+        && let Err(e) = create_dir_all(data_dir)
+    {
+        error!("Failed to create data directory {}: {e}", data_dir.display());
+        process::exit(1);
     }
 
     // Construct a SQLite URL. Sqlx expects "sqlite://<absolute_path>"
     let db_path = data_dir.join("rustlock.db");
     let db_url = format!("sqlite://{}", db_path.display());
 
-    if !db_path.exists() {
-        if let Err(e) = File::create(&db_path) {
-            error!("Failed to create SQLite file {}: {e}", db_path.display());
-            process::exit(1);
-        }
+    if !db_path.exists()
+        && let Err(e) = File::create(&db_path)
+    {
+        error!("Failed to create SQLite file {}: {e}", db_path.display());
+        process::exit(1);
     }
 
     // Connect via SQLx
@@ -220,7 +220,7 @@ fn backup_database(data_dir: &Path) -> io::Result<()> {
     let file = File::create(&backup_path)?;
     let mut zip = zip::ZipWriter::new(file);
 
-    let options = FileOptions::default().compression_method(zip::CompressionMethod::Deflated).unix_permissions(0o600);
+    let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated).unix_permissions(0o600);
 
     // Recursively walk data_dir and add every file
     for entry in WalkDir::new(data_dir) {
